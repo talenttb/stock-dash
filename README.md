@@ -8,6 +8,8 @@ A Clojure application for stock dashboard.
 stock-dash/
 ├── deps.edn                    # 依賴管理檔案
 ├── build.clj                   # 建構腳本
+├── dev/
+│   └── user.clj               # 開發環境設定
 ├── src/
 │   └── stock_dash/
 │       └── core.clj           # 主程式
@@ -15,6 +17,13 @@ stock-dash/
     └── stock_dash/
         └── core_test.clj      # 測試檔案
 ```
+
+## 依賴
+
+- **clojure-plus**: 增強開發體驗的工具集
+  - 改進的錯誤訊息格式
+  - 增強的列印功能
+  - 調試用的 `#p` 讀取器巨集
 
 ## 開發
 
@@ -24,11 +33,11 @@ stock-dash/
 # 直接執行
 clj -M:run
 
-# 啟動 REPL
-clj
+# 啟動開發 REPL (包含 clojure-plus 和 clj-reload)
+clj -M:dev:repl
 
-# 啟動 nREPL (支援 CIDER)
-clj -M:repl
+# 在 REPL 中重新載入變更的程式碼
+user=> (reload)
 ```
 
 ### 執行測試
