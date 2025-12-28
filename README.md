@@ -8,6 +8,10 @@ A Clojure application for stock dashboard.
 stock-dash/
 ├── deps.edn                    # 依賴管理檔案
 ├── build.clj                   # 建構腳本
+├── scripts/
+│   ├── git-hooks/
+│   │   └── pre-commit         # Pre-commit hook 腳本
+│   └── install-git-hooks.sh   # Git hooks 安裝腳本
 ├── dev/
 │   └── user.clj               # 開發環境設定
 ├── src/
@@ -26,6 +30,18 @@ stock-dash/
   - 調試用的 `#p` 讀取器巨集
 
 ## 開發
+
+### Git Hooks 設置
+
+專案提供 pre-commit hook 來防止將調試代碼提交到版本控制。
+
+```bash
+# 安裝 git hooks
+./scripts/install-git-hooks.sh
+```
+
+**Pre-commit 檢查項目：**
+- 檢查 `src/` 目錄中是否有 `#p` 調試巨集
 
 ### 執行程式
 
