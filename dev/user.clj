@@ -3,7 +3,7 @@
             [clojure+.error :as error]
             [clojure+.print :as print]
             [clojure+.hashp :as hashp]
-            [cprop.core :as cprop]))
+            [stock-dash.config :as config]))
 
 (error/install!)
 (print/install!)
@@ -11,16 +11,5 @@
 
 (reload/init {:dirs ["src" "dev"]})
 
-(defonce config (atom nil))
-
-(defn load-config []
-  (reset! config (cprop/load-config))
-  (println "✓ Configuration loaded")
-  @config)
-
 (defn reload []
-  (reload/reload)
-  (load-config))
-
-;; Load config on startup
-(load-config)
+  (reload/reload))

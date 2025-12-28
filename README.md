@@ -52,17 +52,30 @@ stock-dash/
 
 **配置檔案位置：**
 - `resources/config.edn` - 主要配置檔案
+- `src/stock_dash/config.clj` - 配置管理模組
+
+**在應用程式中使用配置：**
+```clojure
+(ns your-namespace
+  (:require [stock-dash.config :as config]))
+
+;; 獲取完整配置
+(config/get-config)
+
+;; 獲取特定配置項
+(get-in (config/get-config) [:server :port])
+```
 
 **在開發 REPL 中使用配置：**
 ```clojure
 ;; 查看當前配置
-@user/config
+(stock-dash.config/get-config)
 
 ;; 重新載入配置（同時也會重載程式碼）
 (reload)
 
 ;; 只重新載入配置
-(load-config)
+(stock-dash.config/load-config!)
 ```
 
 **環境變數覆蓋：**
