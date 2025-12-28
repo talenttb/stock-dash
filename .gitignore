@@ -31,3 +31,7 @@ pom.xml.asc
 .portal/
 *.swp
 *~
+
+# Workspace (local files not to be committed)
+/workspace/*
+!/workspace/.gitkeep

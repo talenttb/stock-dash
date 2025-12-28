@@ -4,7 +4,8 @@
 (defonce config (atom nil))
 
 (defn load-config! []
-  (reset! config (cprop/load-config))
+  (reset! config (cprop/load-config :resource "config.edn"
+                                    :file "workspace/secret.edn"))
   @config)
 
 (defn get-config []
