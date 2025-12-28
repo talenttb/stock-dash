@@ -1,3 +1,4 @@
+# Leiningen
 pom.xml
 pom.xml.asc
 *.jar
@@ -10,5 +11,23 @@ pom.xml.asc
 .lein-repl-history
 .lein-plugins/
 .lein-failures
+
+# REPL
 .nrepl-port
+.nrepl-history
+.rebel_readline_history
+
+# deps.edn
 .cpcache/
+
+# Clojure LSP
+.lsp/
+.clj-kondo/.cache/
+
+# Editor
+.calva/
+.vscode/
+.idea/
+.portal/
+*.swp
+*~
