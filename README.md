@@ -46,6 +46,13 @@ user=> (reload)
 clj -M:test -m clojure.test
 ```
 
+### 檢查過期的依賴
+
+```bash
+# 使用 antq 檢查可更新的依賴
+clj -M:outdated
+```
+
 ## 建構
 
 ### 建立 Uberjar
