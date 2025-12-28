@@ -1,7 +1,8 @@
 {:paths ["src" "resources"]
 
  :deps {org.clojure/clojure {:mvn/version "1.12.0"}
-        io.github.tonsky/clojure-plus {:mvn/version "1.7.0"}}
+        io.github.tonsky/clojure-plus {:mvn/version "1.7.0"}
+        cprop/cprop {:mvn/version "0.1.21"}}
 
  :aliases
  {:dev {:extra-paths ["dev"]
