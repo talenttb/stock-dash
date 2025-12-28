@@ -12,11 +12,16 @@ stock-dash/
 │   ├── git-hooks/
 │   │   └── pre-commit         # Pre-commit hook 腳本
 │   └── install-git-hooks.sh   # Git hooks 安裝腳本
+├── resources/
+│   └── config.edn             # 配置檔案
 ├── dev/
 │   └── user.clj               # 開發環境設定
 ├── src/
 │   └── stock_dash/
-│       └── core.clj           # 主程式
+│       ├── core.clj           # 主程式
+│       ├── config.clj         # 配置管理
+│       ├── server.clj         # Web server 管理
+│       └── handler.clj        # 路由和處理器
 └── test/
     └── stock_dash/
         └── core_test.clj      # 測試檔案
@@ -31,6 +36,17 @@ stock-dash/
 - **cprop**: 配置管理函式庫
   - 支援多種配置來源（環境變數、系統屬性、配置檔案）
   - 自動合併配置層級
+- **http-kit**: 輕量高性能 HTTP server/client
+  - 基於 Java NIO 的非阻塞 I/O
+  - 完全兼容 Ring 規範
+  - 支援 WebSocket
+- **reitit**: 現代化路由函式庫
+  - 資料驅動路由定義
+  - 高效能路由匹配
+  - 支援中間件和 content negotiation
+- **jsonista**: 快速 JSON 處理庫
+  - 基於 Jackson
+  - 高性能 JSON 序列化/反序列化
 
 ## 開發
 
@@ -84,10 +100,74 @@ cprop 支援使用環境變數覆蓋配置，例如：
 export APP__NAME="my-app"  # 對應到 {:app {:name "my-app"}}
 ```
 
+### Web Server
+
+**啟動 server：**
+
+```bash
+# 方式 1: 直接執行（會啟動 web server）
+clj -M:run
+
+# 方式 2: 在開發 REPL 中啟動
+clj -M:dev:repl
+
+# 在 REPL 中使用便利函數
+user=> (start)   # 啟動 server
+user=> (stop)    # 停止 server
+user=> (restart) # 重啟 server
+```
+
+Server 預設會在 `http://localhost:3000` 啟動（可透過 `resources/config.edn` 修改）。
+
+**可用端點：**
+
+- `GET /` - 首頁（HTML）
+- `GET /api/health` - 健康檢查（JSON）
+- `GET /api/status` - 系統狀態（JSON）
+
+
+**修改配置：**
+
+編輯 `resources/config.edn` 中的 `:server` 設定：
+
+```clojure
+:server {:host "localhost"
+         :port 3000}
+```
+
+也可以使用環境變數覆蓋：
+
+```bash
+export SERVER__PORT=8080
+clj -M:run
+```
+
+**熱重載機制：**
+
+本專案使用 var 引用 (#') 支持熱重載，修改 handler 後無需重啟 server：
+
+```clojure
+;; 修改 handler 函數後
+user=> (reload)    ; 重載代碼，server 自動使用新的 handler（無需 restart）
+
+;; 只有在以下情況需要 restart：
+;; 1. 修改 middleware 配置
+;; 2. 修改路由定義
+;; 3. 修改 server 配置（port, host 等）
+user=> (restart)
+```
+
+**性能特性：**
+
+HTTP-Kit 基於 Java NIO，天然支持非阻塞 I/O：
+- 每個請求不佔用一個線程
+- 高並發處理能力
+- 內存佔用低
+
 ### 執行程式
 
 ```bash
-# 直接執行
+# 直接執行（會啟動 web server）
 clj -M:run
 
 # 啟動開發 REPL (包含 clojure-plus 和 clj-reload)

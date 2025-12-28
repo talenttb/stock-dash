@@ -2,7 +2,11 @@
 
  :deps {org.clojure/clojure {:mvn/version "1.12.0"}
         io.github.tonsky/clojure-plus {:mvn/version "1.7.0"}
-        cprop/cprop {:mvn/version "0.1.21"}}
+        cprop/cprop {:mvn/version "0.1.21"}
+        http-kit/http-kit {:mvn/version "2.8.0"}
+        metosin/reitit-ring {:mvn/version "0.7.2"}
+        ring/ring-core {:mvn/version "1.13.0"}
+        metosin/jsonista {:mvn/version "0.3.11"}}
 
  :aliases
  {:dev {:extra-paths ["dev"]

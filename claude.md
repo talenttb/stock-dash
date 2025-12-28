@@ -12,6 +12,7 @@
 - 任何新增或修改功能時，必須同步更新 `README.md`
 - README 應包含使用說明和範例
 
-### clj-reload 整合
-- 新增模組（如配置、連線池等）時，需要配置 `before-reload` 和 `after-reload` hooks
-- 使用 metadata: `^:clj-reload/before-reload` 和 `^:clj-reload/after-reload`
+### 狀態管理
+- 有狀態的組件使用 `defonce` + `atom` 模式
+- 提供 `start-*!` 和 `stop-*!` 函數供手動控制
+- reload 時不自動停止組件，由開發者在 REPL 中手動控制
