@@ -46,6 +46,31 @@ stock-dash/
 **Pre-commit 檢查項目：**
 - 檢查 `src/` 目錄中是否有 `#p` 調試巨集
 
+### 配置管理
+
+專案使用 cprop 來管理配置。
+
+**配置檔案位置：**
+- `resources/config.edn` - 主要配置檔案
+
+**在開發 REPL 中使用配置：**
+```clojure
+;; 查看當前配置
+@user/config
+
+;; 重新載入配置（同時也會重載程式碼）
+(reload)
+
+;; 只重新載入配置
+(load-config)
+```
+
+**環境變數覆蓋：**
+cprop 支援使用環境變數覆蓋配置，例如：
+```bash
+export APP__NAME="my-app"  # 對應到 {:app {:name "my-app"}}
+```
+
 ### 執行程式
 
 ```bash
