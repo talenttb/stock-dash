@@ -6,7 +6,8 @@
         http-kit/http-kit {:mvn/version "2.8.0"}
         metosin/reitit-ring {:mvn/version "0.7.2"}
         ring/ring-core {:mvn/version "1.13.0"}
-        metosin/jsonista {:mvn/version "0.3.11"}}
+        metosin/jsonista {:mvn/version "0.3.11"}
+        com.brunobonacci/mulog {:mvn/version "0.9.0"}}
 
  :aliases
  {:dev {:extra-paths ["dev"]

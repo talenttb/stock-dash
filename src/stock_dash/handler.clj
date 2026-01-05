@@ -1,6 +1,7 @@
 (ns stock-dash.handler
   (:require [reitit.ring :as ring]
-            [jsonista.core :as json]))
+            [jsonista.core :as json]
+            [stock-dash.logging :as log]))
 
 (defn json-response
   ([data] (json-response 200 data))
@@ -48,6 +49,9 @@
     (try
       (handler request)
       (catch Exception e
+        (log/log-error! ::handler-error e
+                        {:uri (:uri request)
+                         :method (:request-method request)})
         (json-response 500 {:error (.getMessage e)
                             :type (str (type e))})))))
 
@@ -72,6 +76,32 @@
     (json-response 405 {:error "Method not allowed"
                         :allowed-methods ["GET"]})))
 
+(defn wrap-request-logging
+  [handler]
+  (fn [request]
+    (let [start-time (System/nanoTime)
+          {:keys [request-method uri query-string]} request]
+      (log/log! ::http-request-start
+                {:method request-method
+                 :uri uri
+                 :query-string query-string})
+      (try
+        (let [response (handler request)
+              duration-ms (/ (- (System/nanoTime) start-time) 1000000.0)]
+          (log/log! ::http-request-complete
+                    {:method request-method
+                     :uri uri
+                     :status (:status response)
+                     :duration-ms duration-ms})
+          response)
+        (catch Exception e
+          (let [duration-ms (/ (- (System/nanoTime) start-time) 1000000.0)]
+            (log/log-error! ::http-request-error e
+                            {:method request-method
+                             :uri uri
+                             :duration-ms duration-ms}))
+          (throw e))))))
+
 (def routes
   [["/" {:handler #'home-handler}]
    ["/api"
@@ -82,4 +112,5 @@
   (-> (ring/ring-handler
        (ring/router routes)
        (ring/create-default-handler))
-      (wrap-errors)))
+      (wrap-errors)
+      (wrap-request-logging)))

@@ -1,6 +1,7 @@
 (ns stock-dash.server
   (:require [org.httpkit.server :as http]
-            [stock-dash.config :as config]))
+            [stock-dash.config :as config]
+            [stock-dash.logging :as log]))
 
 (defonce ^:private server (atom nil))
 
@@ -17,7 +18,7 @@
                  {:ip host
                   :port port})]
     (reset! server stop-fn)
-    (println (str "Server started on http://" host ":" port))
+    (log/log! ::server-started {:host host :port port})
     stop-fn))
 
 (defn stop-server!
@@ -26,4 +27,9 @@
   (when-let [stop-fn @server]
     (stop-fn)
     (reset! server nil)
-    (println "Server stopped")))
+    (log/log! ::server-stopped)))
+
+(defn server-running?
+  "檢查 server 是否正在運行"
+  []
+  (some? @server))
