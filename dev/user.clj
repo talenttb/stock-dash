@@ -3,6 +3,7 @@
             [clojure+.error :as error]
             [clojure+.print :as print]
             [clojure+.hashp :as hashp]
+            [com.brunobonacci.mulog :as mu]
             [stock-dash.server :as server]
             [stock-dash.handler :as handler]
             [stock-dash.config :as config]
@@ -14,7 +15,7 @@
 
 (reload/init {:dirs ["src" "dev"]})
 
-(defn reload
+(defn reset
   "重載代碼、配置和日誌系統"
   []
   (reload/reload)
@@ -33,19 +34,22 @@
   (server/stop-server!))
 
 (defn restart
-  "重啟 web server"
+  "重載代碼並重啟 web server"
   []
   (stop)
+  (reset)
   (start))
 
 (defn test-log
   "測試日誌記錄"
   []
-  (log/log! ::test-event {:test-data "hello from REPL"
-                          :timestamp (System/currentTimeMillis)}))
+  (mu/log ::test-event
+          :test-data "hello from REPL"
+          :timestamp (System/currentTimeMillis)))
 
 (comment
-  (reload)
+  (restart)
+  (reset)
   (test-log)
   ;;
   )

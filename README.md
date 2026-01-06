@@ -50,8 +50,8 @@ stock-dash/
 ;; 查看當前配置
 (stock-dash.config/get-config)
 
-;; 重新載入配置（同時也會重載程式碼）
-(reload)
+;; 重新載入配置（同時也會重載程式碼和日誌）
+(reset)
 
 ;; 只重新載入配置
 (stock-dash.config/load-config!)
@@ -75,9 +75,10 @@ clj -M:run
 clj -M:dev:repl
 
 # 在 REPL 中使用便利函數
-user=> (start)   # 啟動 server
+user=> (start)   # 啟動 server（如果已運行會自動重啟）
 user=> (stop)    # 停止 server
-user=> (restart) # 重啟 server
+user=> (reset)   # 重載代碼、配置和日誌（不重啟 server）
+user=> (restart) # 重載代碼並重啟 server（推薦使用）
 ```
 
 Server 預設會在 `http://localhost:3000` 啟動（可透過 `resources/config.edn` 修改）。
@@ -103,6 +104,53 @@ Server 預設會在 `http://localhost:3000` 啟動（可透過 `resources/config
 ```bash
 export SERVER__PORT=8080
 clj -M:run
+```
+
+### Logging
+
+專案使用 [mulog](https://github.com/BrunoBonacci/mulog) 作為 logging 框架。
+
+**特色：**
+- **Global Context**: 自動在所有 log 中包含 app-name, version, env, host
+- **Request Tracing**: 每個 HTTP request 自動生成 trace-id，追蹤整個請求的生命週期
+- **Context 繼承**: 所有 nested function 的 logs 自動繼承 request context
+
+**自動記錄的 Request 資訊：**
+- `:mulog/trace-id` - 唯一的追蹤 ID
+- `:mulog/duration` - 請求處理時間（nanoseconds）
+- `:mulog/outcome` - `:ok` 或 `:error`
+- `:method`, `:uri`, `:query-string` - HTTP 請求基本資訊
+- `:user-agent`, `:referer`, `:remote-addr` - 客戶端資訊
+
+**在程式碼中使用：**
+```clojure
+(ns your-namespace
+  (:require [com.brunobonacci.mulog :as mu]
+            [stock-dash.logging :as log]))
+
+;; 記錄一般事件
+(mu/log ::event-name :key "value" :count 123)
+
+;; 記錄錯誤（自動添加錯誤資訊）
+(log/log-error! ::error-name exception :context "data")
+
+;; 追蹤操作執行時間
+(mu/trace ::operation
+  [:user-id user-id]
+  (do-something))
+```
+
+**Log 輸出位置：**
+- Console: 開發模式預設啟用（pretty-printed）
+- File: `workspace/app.log`（可在 `resources/config.edn` 中配置）
+
+**管理 Publishers：**
+```clojure
+;; 在 REPL 中重啟 logging
+(stock-dash.logging/restart-publishers!)
+
+;; 停止 logging
+(stock-dash.logging/stop-publishers!)
 ```
 
 ### 執行測試

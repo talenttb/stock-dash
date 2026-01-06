@@ -1,6 +1,7 @@
 (ns stock-dash.handler
   (:require [reitit.ring :as ring]
             [jsonista.core :as json]
+            [com.brunobonacci.mulog :as mu]
             [stock-dash.logging :as log]))
 
 (defn json-response
@@ -32,8 +33,25 @@
 
 (defn health-check
   [_request]
-  (json-response {:status "ok"
-                  :timestamp (System/currentTimeMillis)}))
+  (mu/log ::operation-start :message "開始健康檢查")
+
+  (let [timestamp (System/currentTimeMillis)
+        _ (mu/log ::timestamp-generated :timestamp timestamp)
+
+        response (mu/trace ::json-parser
+                   [:source "json-parser"]
+                   (json-response {:status "ok"
+                                   :timestamp timestamp}))]
+
+    (mu/log ::data-fetched
+            :status (:status response)
+            :has-body (some? (:body response)))
+
+    (mu/log ::operation-complete :result "success")
+
+    (mu/trace ::health-check-return
+      [:final-status (:status response)]
+      response)))
 
 (defn status
   [_request]
@@ -50,8 +68,8 @@
       (handler request)
       (catch Exception e
         (log/log-error! ::handler-error e
-                        {:uri (:uri request)
-                         :method (:request-method request)})
+                        :uri (:uri request)
+                        :method (:request-method request))
         (json-response 500 {:error (.getMessage e)
                             :type (str (type e))})))))
 
@@ -79,28 +97,18 @@
 (defn wrap-request-logging
   [handler]
   (fn [request]
-    (let [start-time (System/nanoTime)
-          {:keys [request-method uri query-string]} request]
-      (log/log! ::http-request-start
-                {:method request-method
-                 :uri uri
-                 :query-string query-string})
-      (try
-        (let [response (handler request)
-              duration-ms (/ (- (System/nanoTime) start-time) 1000000.0)]
-          (log/log! ::http-request-complete
-                    {:method request-method
-                     :uri uri
-                     :status (:status response)
-                     :duration-ms duration-ms})
-          response)
-        (catch Exception e
-          (let [duration-ms (/ (- (System/nanoTime) start-time) 1000000.0)]
-            (log/log-error! ::http-request-error e
-                            {:method request-method
-                             :uri uri
-                             :duration-ms duration-ms}))
-          (throw e))))))
+    (let [{:keys [request-method uri query-string headers remote-addr]} request
+          user-agent (get headers "user-agent")
+          referer (get headers "referer")]
+      (mu/with-context {:method request-method
+                        :uri uri
+                        :query-string query-string
+                        :user-agent user-agent
+                        :referer referer
+                        :remote-addr remote-addr}
+        (mu/trace ::http-request
+          []
+          (handler request))))))
 
 (def routes
   [["/" {:handler #'home-handler}]
