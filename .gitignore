@@ -16,6 +16,7 @@ pom.xml.asc
 .nrepl-port
 .nrepl-history
 .rebel_readline_history
+.brepl/
 
 # deps.edn
 .cpcache/
@@ -31,6 +32,9 @@ pom.xml.asc
 .portal/
 *.swp
 *~
+
+# AI Tools
+.claude/
 
 # Workspace (local files not to be committed)
 /workspace/*
