@@ -2,7 +2,8 @@
   (:require [reitit.ring :as ring]
             [jsonista.core :as json]
             [com.brunobonacci.mulog :as mu]
-            [stock-dash.logging :as log]))
+            [stock-dash.logging :as log]
+            [stock-dash.pathom :as pathom]))
 
 (defn json-response
   ([data] (json-response 200 data))
@@ -25,6 +26,7 @@
   <h1>Stock Dashboard</h1>
   <p>Welcome to Stock Dashboard</p>
   <ul>
+    <li><a href=\"/stocks\">Pathom3 DAG Demo</a></li>
     <li><a href=\"/api/health\">API Health Check</a></li>
     <li><a href=\"/api/status\">API Status</a></li>
   </ul>
@@ -94,6 +96,13 @@
     (json-response 405 {:error "Method not allowed"
                         :allowed-methods ["GET"]})))
 
+(defn stocks-handler
+  [{:keys [request-method] :as request}]
+  (case request-method
+    :get (pathom/render-page)
+    (json-response 405 {:error "Method not allowed"
+                        :allowed-methods ["GET"]})))
+
 (defn wrap-request-logging
   [handler]
   (fn [request]
@@ -112,6 +121,7 @@
 
 (def routes
   [["/" {:handler #'home-handler}]
+   ["/stocks" {:handler #'stocks-handler}]
    ["/api"
     ["/health" {:handler #'health-handler}]
     ["/status" {:handler #'status-handler}]]])

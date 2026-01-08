@@ -1,0 +1,24 @@
+{:app {:name "stock-dash"
+       :version "0.1.0"}
+
+ :server {:host "0.0.0.0"
+          :port 8080}
+
+ :logging {:console {:enabled false}
+           :file {:enabled true
+                  :path "/var/log/stock-dash/app.log"}}
+
+ ;; Production 環境的 Pathom Debugging 建議配置
+ :pathom {:debug {:enabled true
+                  ;; 記錄慢查詢以發現效能問題
+                  :log-slow-queries true
+                  ;; Production 建議較高門檻值（避免過多日誌）
+                  :slow-query-threshold-ms 500
+                  ;; 記錄錯誤以追蹤問題
+                  :log-errors true
+                  ;; Production 不建議開啟（效能開銷大）
+                  :full-stats false}}
+
+ :database {:host "db.example.com"
+            :port 5432
+            :name "stockdb"}}

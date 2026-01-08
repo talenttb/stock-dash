@@ -8,6 +8,12 @@
            :file {:enabled true
                   :path "workspace/app.log"}}
 
+ :pathom {:debug {:enabled true
+                  :log-slow-queries true
+                  :slow-query-threshold-ms 100
+                  :log-errors true
+                  :full-stats false}}
+
  :database {:host "localhost"
             :port 5432
             :name "stockdb"}}

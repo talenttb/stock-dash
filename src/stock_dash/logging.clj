@@ -58,4 +58,13 @@
   (stop-publishers!)
   (init-publishers!))
 
+;; clj-reload hooks
+(defn ^:clj-reload/before-reload before-reload []
+  (println "Reloading logging namespace...")
+  (stop-publishers!))
+
+(defn ^:clj-reload/after-reload after-reload []
+  (init-publishers!)
+  (println "✓ Logging reloaded"))
+
 (init-publishers!)
