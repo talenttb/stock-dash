@@ -3,12 +3,9 @@
             [clojure+.error :as error]
             [clojure+.print :as print]
             [clojure+.hashp :as hashp]
-            [com.brunobonacci.mulog :as mu]
             [stock-dash.server :as server]
             [stock-dash.handler :as handler]
-            [stock-dash.config :as config]
-            [stock-dash.logging :as log]
-            [stock-dash.pathom :as pathom]))
+            [stock-dash.config :as config]))
 
 (error/install!)
 (print/install!)
@@ -39,55 +36,17 @@
   (reset)
   (start))
 
-(defn test-log
-  "測試日誌記錄"
-  []
-  (mu/log ::test-event
-          :test-data "hello from REPL"
-          :timestamp (System/currentTimeMillis)))
-
-(defn test-pathom
-  "測試 Pathom EQL 查詢"
-  []
-  (pathom/process-eql
-   [{:todos/all [:todo/id :todo/title :todo/status :todo/priority-label]}]))
-
-(defn test-pathom-simple
-  "測試簡單查詢"
-  []
-  (pathom/process-eql
-   [{[:todo/id 1] [:todo/title :todo/status]}]))
-
-(defn test-pathom-with-stats
-  "測試查詢並顯示詳細統計（debugging 用）"
-  []
-  (pathom/process-eql-with-stats
-   [{:todos/all [:todo/id :todo/title :todo/status :todo/priority-label]}]))
-
 (comment
-  (restart)
-  (reset)
-  (test-log)
+  ;; 初次啟動
+  (start)
 
-  ;; Pathom 測試
-  (test-pathom)
-  (test-pathom-simple)
+  ;; 重載配置
+  (config/load-config!)
 
-  ;; 測試單一 todo
-  (pathom/process-eql [{[:todo/id 1] [:todo/title :todo/status :todo/priority-label]}])
+  ;; 開發循環
+  (restart)  ; 完整重啟：stop -> reset -> start
+  (reset)    ; 只重載代碼
 
-  ;; 測試 HTML 渲染
-  (pathom/process-eql [{:todos/all [:todo/display-html]}])
-
-  ;; Debugging: 查看詳細統計
-  (test-pathom-with-stats)
-  ;; => {:result {...} :duration-ms 5 :stats {...} :resolver-count 15}
-
-  ;; Debugging: 只看執行時間
-  (:duration-ms (test-pathom-with-stats))
-
-  ;; Debugging: 查看 resolver 數量
-  (:resolver-count (test-pathom-with-stats))
   ;;
   )
 
