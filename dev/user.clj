@@ -38,7 +38,7 @@
 
 (comment
   ;; 初次啟動
-  (start)
+  (start)  ; 會自動啟動 Portal
 
   ;; 重載配置
   (config/load-config!)
@@ -46,6 +46,9 @@
   ;; 開發循環
   (restart)  ; 完整重啟：stop -> reset -> start
   (reset)    ; 只重載代碼
+
+  ;; Portal 會跟隨 server 自動啟動，直接使用即可
+  (tap> {:hello "world"})
 
   ;;
   )

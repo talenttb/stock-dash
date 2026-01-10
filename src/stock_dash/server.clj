@@ -1,7 +1,8 @@
 (ns stock-dash.server
   (:require [org.httpkit.server :as http]
             [com.brunobonacci.mulog :as mu]
-            [stock-dash.config :as config]))
+            [stock-dash.config :as config]
+            [stock-dash.portal :as portal]))
 
 (defonce ^:private server (atom nil))
 
@@ -9,6 +10,7 @@
   "停止 web server"
   []
   (when-let [stop-fn @server]
+    (portal/stop!)
     (stop-fn)
     (reset! server nil)
     (mu/log ::server-stopped)))
@@ -27,6 +29,7 @@
                  {:ip host
                   :port port})]
     (reset! server stop-fn)
+    (portal/start!)
     (mu/log ::server-started :host host :port port)
     stop-fn))
 

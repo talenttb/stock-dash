@@ -13,11 +13,11 @@
    3 {:todo/id 3 :todo/title "建立 DAG 範例" :todo/completed true :todo/priority :low}})
 
 ;; === 2. 資料 Resolvers ===
-(pco/defresolver all-todos-resolver [env input]
+(pco/defresolver all-todos-resolver [_env _input]
   {::pco/output [{:todos/all [:todo/id]}]}
   {:todos/all (mapv (fn [id] {:todo/id id}) (keys todos-db))})
 
-(pco/defresolver todo-by-id-resolver [env {:todo/keys [id]}]
+(pco/defresolver todo-by-id-resolver [_env {:todo/keys [id]}]
   {::pco/output [:todo/title :todo/completed :todo/priority]}
   ;; 模擬 IO 延遲以驗證平行執行和慢查詢記錄
   ;; (Thread/sleep 50)
@@ -25,11 +25,11 @@
   (get todos-db id))
 
 ;; === 3. 計算 Resolvers ===
-(pco/defresolver todo-status-resolver [env {:todo/keys [completed]}]
+(pco/defresolver todo-status-resolver [_env {:todo/keys [completed]}]
   {::pco/output [:todo/status]}
   {:todo/status (if completed "已完成" "進行中")})
 
-(pco/defresolver priority-label-resolver [env {:todo/keys [priority]}]
+(pco/defresolver priority-label-resolver [_env {:todo/keys [priority]}]
   {::pco/output [:todo/priority-label]}
   {:todo/priority-label (case priority
                           :high "高優先度"
@@ -38,7 +38,7 @@
                           "未知")})
 
 ;; === 4. View Resolver ===
-(pco/defresolver todo-html-resolver [env {:todo/keys [id title status priority-label]}]
+(pco/defresolver todo-html-resolver [_env {:todo/keys [_id title status priority-label]}]
   {::pco/output [:todo/display-html]}
   {:todo/display-html
    (str "<li class=\"todo-item\">"
