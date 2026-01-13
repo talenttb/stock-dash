@@ -8,7 +8,9 @@
            :file {:enabled true
                   :path "workspace/app.log"}}
 
- :portal {:port 5678}
+ :portal {:port 5678
+          ;; 可選: :vs-code, :intellij, 或不設定（使用瀏覽器）
+          :launcher :vs-code}
 
  :pathom {:debug {:enabled true
                   :log-slow-queries true

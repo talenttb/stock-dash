@@ -1,0 +1,3 @@
+[submodule "native/fubon-sdk-ffi"]
+	path = native/fubon-sdk-ffi
+	url = https://github.com/talenttb/fubon-sdk-ffi.git

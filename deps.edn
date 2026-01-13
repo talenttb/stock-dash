@@ -1,6 +1,9 @@
-{:paths ["src" "resources"]
+{:paths ["src" "resources"
+         "native/generated"        ; Java FFI 程式碼
+         "target/classes"]         ; 編譯後的 .class
 
  :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        org.clojure/core.async {:mvn/version "1.6.681"}
         io.github.tonsky/clojure-plus {:mvn/version "1.7.0"}
         cprop/cprop {:mvn/version "0.1.21"}
         http-kit/http-kit {:mvn/version "2.8.0"}
@@ -16,13 +19,15 @@
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}}}
 
   ;; 啟動 aliases - 包含 main-opts，單獨使用
-  :run {:main-opts ["-m" "stock-dash.core"]}
+  :run {:jvm-opts ["-Djava.library.path=native/lib"]
+        :main-opts ["-m" "stock-dash.core"]}
 
   :repl {:extra-paths ["dev"]
          :extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}
                       cider/cider-nrepl {:mvn/version "0.50.2"}
                       io.github.tonsky/clj-reload {:mvn/version "1.0.0"}
                       djblue/portal {:mvn/version "0.60.1"}}
+         :jvm-opts ["-Djava.library.path=native/lib"]
          :main-opts ["-m" "nrepl.cmdline"
                      "--middleware" "[cider.nrepl/cider-middleware]"]}
 

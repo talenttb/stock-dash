@@ -39,3 +39,16 @@ pom.xml.asc
 # Workspace (local files not to be committed)
 /workspace/*
 !/workspace/.gitkeep
+
+# Log files (Fubon SDK may generate these)
+/log/
+
+# Native 編譯產物
+native/generated/
+native/lib/*.dylib
+native/lib/*.so
+native/lib/*.dll
+native/fubon-sdk-ffi/c_wrapper/build/
+
+# 保留說明檔案
+!native/lib/README.md
