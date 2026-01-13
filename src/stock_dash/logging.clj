@@ -7,9 +7,7 @@
 (defn- init-global-context! []
   (let [get-config (requiring-resolve 'stock-dash.config/get-config)
         cfg (get-config)
-        ctx {:app-name (get-in cfg [:app :name])
-             :app-version (get-in cfg [:app :version])
-             :env (or (System/getenv "APP_ENV") "development")
+        ctx {:env (get-in cfg [:app :env])
              :host (.getHostName (java.net.InetAddress/getLocalHost))}]
     (mu/set-global-context! ctx)))
 

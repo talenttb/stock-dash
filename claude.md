@@ -47,3 +47,21 @@
 **重要：新增或修改有狀態的 namespace 時，必須按照上表實作對應的 reload hooks。**
 
 長連線組件避免在 reload 時重啟，以免中斷開發流程（如重新登入）。詳見 `src/stock_dash/fubon/lifecycle.clj`。
+
+## Schema 驗證（Malli）
+
+使用 Malli 進行 boundary validation，在 SDK 函數入口驗證輸入。
+
+### 使用方式
+
+所有 SDK 公開函數都用 `ensure!` 驗證輸入：
+
+```clojure
+(schemas/ensure! :login {your input params})
+```
+
+### 新增函數時
+
+1. 在 `sdk-schema` 加上對應的 multi branch [:action :parameters]
+2. Schema 要對齊 C SDK 的資料結構
+3. 保持簡潔，不過度設計

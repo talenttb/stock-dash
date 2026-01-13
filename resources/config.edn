@@ -1,5 +1,4 @@
-{:app {:name "stock-dash"
-       :version "0.1.0"}
+{:app {:env :dev}
 
  :server {:host "localhost"
           :port 8080}

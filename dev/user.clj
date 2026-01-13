@@ -79,19 +79,18 @@
 
 (comment
   ;; 初次啟動
-  (start)   ; 會自動啟動 Portal (但不開啟 UI)
-  (portal)  ; 手動打開 Portal UI
+  (start)
+  (portal)
 
   ;; 重載配置
   (config/load-config!)
 
   ;; 開發循環
-  (restart)  ; 完整重啟：stop -> reset -> start
-  (reset)    ; 只重載代碼
+  (restart)
+  (reset)
 
-  ;; Jack-out 前清理（重要！）
+  ;; Jack-out 前清理
   (cleanup)
 
   ;;
   )
-

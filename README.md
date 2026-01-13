@@ -170,11 +170,21 @@ clj -T:build compile-java
 (sdk/logout-all!)
 ```
 
+**Schema 驗證：**
+
+專案使用 [Malli](https://github.com/metosin/malli) 進行 boundary validation，自動檢查所有輸入：
+
+**環境控制：**
+- **Dev** (`:app/env :dev`)：驗證失敗直接 throw 完整錯誤，方便除錯
+- **Prod** (`:app/env :prod`)：驗證失敗記錄完整 log + throw 簡化訊息給前端
+```
+
 **設計原則：**
 - ✅ **對齊原始 SDK**：完全對齊 C++ SDK 的 `login(personal_id) -> vector<Account>` 設計
 - ✅ **以 personal-id 為核心**：login/logout 都以 personal-id 為單位操作
 - ✅ **避免字串拼接**：不使用 "personal-id:branch-account" 這種字串作為 key
 - ✅ **結構化資料**：使用 map 和 vector，而非字串作為複合 key
+- ✅ **Schema 驗證**：使用 Malli 進行資料結構驗證與型別提示
 
 **重要特性：**
 - ✅ **多身份證支援**：可以同時登入多個身份證（每個身份證可有多個帳號）

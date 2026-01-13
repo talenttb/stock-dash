@@ -4,6 +4,7 @@
    [com.brunobonacci.mulog :as mu]
    [stock-dash.fubon.ffi :as ffi]
    [stock-dash.fubon.lifecycle :as lifecycle]
+   [stock-dash.fubon.schemas :as schemas]
    [stock-dash.fubon.websocket :as ws]))
 
 (defn- mask-id [id]
@@ -13,6 +14,11 @@
 
 (defn login!
   [personal-id password cert-path & [cert-pass]]
+  (schemas/ensure! :login {:personal-id personal-id
+                           :password password
+                           :cert-path cert-path
+                           :cert-pass cert-pass})
+
   (let [sdk (lifecycle/get-sdk)
         ;; C SDK 需要絕對路徑
         absolute-cert-path (.getAbsolutePath (io/file cert-path))]
@@ -41,6 +47,8 @@
 
    注意：C SDK 沒有 logout API，只在 stop-sdk! 釋放資源"
   [personal-id]
+  (schemas/ensure! :logout personal-id)
+
   (when (lifecycle/get-accounts personal-id)
     (mu/trace ::logout [:personal-id personal-id]
       (try
@@ -65,6 +73,8 @@
    參數：account - {:name :branch-no :account :account-type}
    回傳：{:balance :available-balance}"
   [account]
+  (schemas/ensure! :bank-balance account)
+
   (let [sdk (lifecycle/get-sdk)]
     (mu/trace ::bank-balance
       [:account (:account account)]
@@ -76,6 +86,8 @@
 (defn bank-balance-by-personal-id
   "用 personal-id 查詢餘額（查第一個帳號）"
   [personal-id]
+  (schemas/ensure! :bank-balance-by-personal-id personal-id)
+
   (let [accounts (lifecycle/get-accounts personal-id)]
     (when-not accounts
       (throw (ex-info "找不到該身份證的已登入帳號"
