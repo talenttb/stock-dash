@@ -44,7 +44,7 @@
      [:account [:maybe :string]]
      [:branch-no [:maybe :string]]
      [:stock-no [:maybe :string]]
-     [:order-type :int]
+     [:order-type [:enum :stock :margin :short :sbl :day-trade :un-supported :un-defined]]
      [:lastday-qty :int]
      [:buy-qty :int]
      [:buy-filled-qty :int]

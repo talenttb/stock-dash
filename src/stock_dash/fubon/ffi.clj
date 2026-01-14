@@ -1,5 +1,6 @@
 (ns stock-dash.fubon.ffi
   "低階 FFI bindings，直接封裝 Panama FFI 呼叫"
+  (:require [stock-dash.fubon.enums :as enums])
   (:import [java.lang.foreign Arena MemorySegment ValueLayout]
            [com.fubon.ffi fubon_c_h FubonAccount FubonAccountArray FubonLoginResult
             FubonBankRemain FubonBankRemainResult
@@ -194,7 +195,7 @@
                    :account (parse-c-string account-ptr)
                    :branch-no (parse-c-string branch-no-ptr)
                    :stock-no (parse-c-string stock-no-ptr)
-                   :order-type order-type
+                   :order-type (enums/int->order-type order-type)
                    :lastday-qty (FubonInventory/lastday_qty inv-seg)
                    :buy-qty (FubonInventory/buy_qty inv-seg)
                    :buy-filled-qty (FubonInventory/buy_filled_qty inv-seg)
