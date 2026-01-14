@@ -57,7 +57,37 @@
      [:odd :fubon/inventory-odd]]
 
     :fubon/inventories-result
-    [:vector :fubon/inventory]}))
+    [:vector :fubon/inventory]
+
+    :fubon/market-type
+    [:enum :common :fixing :odd :intraday-odd :emg :emg-odd :un-supported :un-defined]
+
+    :fubon/symbol-quote
+    [:map
+     [:market [:maybe :string]]
+     [:symbol [:maybe :string]]
+     [:istib-or-psb :boolean]
+     [:market-type :fubon/market-type]
+     [:status {:optional true} [:maybe :int]]
+     [:reference-price {:optional true} [:maybe :double]]
+     [:unit :int]
+     [:update-time [:maybe :string]]
+     [:limitup-price {:optional true} [:maybe :double]]
+     [:limitdown-price {:optional true} [:maybe :double]]
+     [:open-price {:optional true} [:maybe :double]]
+     [:high-price {:optional true} [:maybe :double]]
+     [:low-price {:optional true} [:maybe :double]]
+     [:last-price {:optional true} [:maybe :double]]
+     [:total-volume {:optional true} [:maybe :int]]
+     [:total-transaction {:optional true} [:maybe :int]]
+     [:total-value {:optional true} [:maybe :int]]
+     [:last-size {:optional true} [:maybe :int]]
+     [:last-transaction {:optional true} [:maybe :int]]
+     [:last-value {:optional true} [:maybe :int]]
+     [:bid-price {:optional true} [:maybe :double]]
+     [:bid-volume {:optional true} [:maybe :int]]
+     [:ask-price {:optional true} [:maybe :double]]
+     [:ask-volume {:optional true} [:maybe :int]]]}))
 
 (mr/set-default-registry! registry)
 
@@ -77,6 +107,14 @@
    [:inventories
     [:tuple :keyword :fubon/account]]
    [:inventories-by-personal-id
+    [:tuple :keyword :fubon/personal-id]]
+   [:symbol-quote
+    [:tuple :keyword
+     [:map
+      [:account :fubon/account]
+      [:symbol :string]
+      [:market-type {:optional true} :fubon/market-type]]]]
+   [:symbol-quote-by-personal-id
     [:tuple :keyword :fubon/personal-id]]
    [:logout
     [:tuple :keyword :fubon/personal-id]]])

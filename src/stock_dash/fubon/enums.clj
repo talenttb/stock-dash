@@ -21,3 +21,28 @@
 (defn order-type->int
   [kw]
   (order-type-to-int kw))
+
+;; === MarketType enum ===
+
+(def market-type-to-int
+  {:common 1
+   :fixing 2
+   :odd 3
+   :intraday-odd 4
+   :emg 5
+   :emg-odd 6
+   :un-supported 7
+   :un-defined 8})
+
+(def int-to-market-type
+  (set/map-invert market-type-to-int))
+
+(defn int->market-type
+  "將 C 層的整數 market-type 轉換為 Clojure keyword"
+  [n]
+  (int-to-market-type n n))
+
+(defn market-type->int
+  "將 Clojure keyword market-type 轉換為 C 層的整數"
+  [kw]
+  (market-type-to-int kw 8))

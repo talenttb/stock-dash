@@ -4,7 +4,8 @@
   (:import [java.lang.foreign Arena MemorySegment ValueLayout]
            [com.fubon.ffi fubon_c_h FubonAccount FubonAccountArray FubonLoginResult
             FubonBankRemain FubonBankRemainResult
-            FubonInventory FubonInventoryArray FubonInventoryOdd FubonInventoryResult]))
+            FubonInventory FubonInventoryArray FubonInventoryOdd FubonInventoryResult
+            FubonSymbolQuote FubonSymbolQuoteResult]))
 
 ;; === Arena 管理 ===
 (defonce ^:private global-arena (atom nil))
@@ -246,6 +247,110 @@
               (fubon_c_h/fubon_free_inventory_result result-seg)
               {:success false :error-msg (or error-msg "Unknown error")})))))))
 
+;; === 股票報價查詢 ===
+(defn- parse-symbol-quote
+  "解析 FubonSymbolQuote 結構
+   參數：quote-seg - MemorySegment (FubonSymbolQuote)
+   回傳：{:market :symbol :istib-or-psb :market-type :status ...}"
+  [quote-seg]
+  (let [market-ptr (FubonSymbolQuote/market quote-seg)
+        symbol-ptr (FubonSymbolQuote/symbol quote-seg)
+        update-time-ptr (FubonSymbolQuote/update_time quote-seg)
+        ;; 讀取數值欄位
+        status (FubonSymbolQuote/status quote-seg)
+        reference-price (FubonSymbolQuote/reference_price quote-seg)
+        unit (FubonSymbolQuote/unit quote-seg)
+        limitup-price (FubonSymbolQuote/limitup_price quote-seg)
+        limitdown-price (FubonSymbolQuote/limitdown_price quote-seg)
+        open-price (FubonSymbolQuote/open_price quote-seg)
+        high-price (FubonSymbolQuote/high_price quote-seg)
+        low-price (FubonSymbolQuote/low_price quote-seg)
+        last-price (FubonSymbolQuote/last_price quote-seg)
+        total-volume (FubonSymbolQuote/total_volume quote-seg)
+        total-transaction (FubonSymbolQuote/total_transaction quote-seg)
+        total-value (FubonSymbolQuote/total_value quote-seg)
+        last-size (FubonSymbolQuote/last_size quote-seg)
+        last-transaction (FubonSymbolQuote/last_transaction quote-seg)
+        last-value (FubonSymbolQuote/last_value quote-seg)
+        bid-price (FubonSymbolQuote/bid_price quote-seg)
+        bid-volume (FubonSymbolQuote/bid_volume quote-seg)
+        ask-price (FubonSymbolQuote/ask_price quote-seg)
+        ask-volume (FubonSymbolQuote/ask_volume quote-seg)
+        market-type (FubonSymbolQuote/market_type quote-seg)
+        istib-or-psb (FubonSymbolQuote/istib_or_psb quote-seg)]
+    {:market (parse-c-string market-ptr)
+     :symbol (parse-c-string symbol-ptr)
+     :istib-or-psb istib-or-psb
+     :market-type (enums/int->market-type market-type)
+     :status (when (not= status -1) status)
+     :reference-price (when-not (Double/isNaN reference-price) reference-price)
+     :unit unit
+     :update-time (parse-c-string update-time-ptr)
+     :limitup-price (when-not (Double/isNaN limitup-price) limitup-price)
+     :limitdown-price (when-not (Double/isNaN limitdown-price) limitdown-price)
+     :open-price (when-not (Double/isNaN open-price) open-price)
+     :high-price (when-not (Double/isNaN high-price) high-price)
+     :low-price (when-not (Double/isNaN low-price) low-price)
+     :last-price (when-not (Double/isNaN last-price) last-price)
+     :total-volume (when (not= total-volume -1) total-volume)
+     :total-transaction (when (not= total-transaction -1) total-transaction)
+     :total-value (when (not= total-value -1) total-value)
+     :last-size (when (not= last-size -1) last-size)
+     :last-transaction (when (not= last-transaction -1) last-transaction)
+     :last-value (when (not= last-value -1) last-value)
+     :bid-price (when-not (Double/isNaN bid-price) bid-price)
+     :bid-volume (when (not= bid-volume -1) bid-volume)
+     :ask-price (when-not (Double/isNaN ask-price) ask-price)
+     :ask-volume (when (not= ask-volume -1) ask-volume)}))
+
+(defn query-symbol-quote
+  "查詢個股報價
+   參數：sdk-handle, account, symbol, market-type (optional keyword)
+   回傳：{:success boolean :quote {...}} 或 {:success false :error-msg str}"
+  [sdk-handle account symbol & [market-type]]
+  (let [arena @global-arena
+        ;; 建立 FubonAccount 結構
+        account-seg (.allocate arena (FubonAccount/layout))
+        name-str (.allocateFrom arena (or (:name account) ""))
+        branch-str (.allocateFrom arena (:branch-no account))
+        account-str (.allocateFrom arena (:account account))
+        type-str (.allocateFrom arena (or (:account-type account) ""))]
+    ;; 寫入 Account 結構
+    (FubonAccount/name account-seg name-str)
+    (FubonAccount/branch_no account-seg branch-str)
+    (FubonAccount/account account-seg account-str)
+    (FubonAccount/account_type account-seg type-str)
+    ;; 分配 symbol 字串
+    (let [symbol-str (.allocateFrom arena symbol)
+          ;; market-type 轉換為整數（預設為 8 = UN_DEFINED）
+          market-type-int (if market-type
+                            (enums/market-type->int market-type)
+                            8)
+          ;; 呼叫 C 函數
+          result-seg (fubon_c_h/fubon_query_symbol_quote
+                       sdk-handle
+                       account-seg
+                       symbol-str
+                       market-type-int)]
+      ;; 檢查結果
+      (if (.equals result-seg (MemorySegment/NULL))
+        {:success false :error-msg "查詢失敗：回傳 NULL"}
+        (let [is-success (FubonSymbolQuoteResult/is_success result-seg)
+              error-msg-ptr (FubonSymbolQuoteResult/error_message result-seg)
+              data-ptr (FubonSymbolQuoteResult/data result-seg)]
+          (if is-success
+            ;; 成功：解析 SymbolQuote
+            (let [quote (when-not (.equals data-ptr (MemorySegment/NULL))
+                          (parse-symbol-quote data-ptr))]
+              (fubon_c_h/fubon_free_symbol_quote_result result-seg)
+              {:success true
+               :quote quote})
+            ;; 失敗
+            (let [error-msg (when-not (.equals error-msg-ptr (MemorySegment/NULL))
+                              (.getString error-msg-ptr 0))]
+              (fubon_c_h/fubon_free_symbol_quote_result result-seg)
+              {:success false :error-msg (or error-msg "Unknown error")})))))))
+
 ;; === WebSocket Callback 註冊（TODO）===
 ;; 以下函數需要等 C SDK 提供 WebSocket callback API 後實作
 
@@ -294,6 +399,3 @@
   (throw (ex-info "WebSocket callback unregistration not implemented yet"
                   {:sdk-handle sdk-handle
                    :account-id account-id})))
-
-;; === 輔助函數 ===
-;; TODO: 實作 parse-account-array, create-account-segment 等
