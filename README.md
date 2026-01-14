@@ -157,6 +157,27 @@ clj -T:build compile-java
 (sdk/bank-balance-by-personal-id "A123456789")
 ;=> {:balance 123456 :available-balance 123456}
 
+;; 查詢股票庫存（原始 API，直接使用 account map）
+(sdk/inventories first-account)
+;=> [{:date "20260113"
+;     :account "567890"
+;     :branch-no "1234"
+;     :stock-no "2330"
+;     :order-type 1
+;     :lastday-qty 1000
+;     :buy-qty 0
+;     :buy-filled-qty 0
+;     :buy-value 0
+;     :today-qty 1000
+;     :tradable-qty 1000
+;     :sell-qty 0
+;     :sell-filled-qty 0
+;     :sell-value 0
+;     :odd {:lastday-qty 0 :buy-qty 0 ...}}]
+
+;; 便利函數：用 personal-id 查詢庫存（查詢第一個帳號）
+(sdk/inventories-by-personal-id "A123456789")
+
 ;; 模擬 WebSocket 訊息（測試）
 (require '[stock-dash.fubon.websocket :as ws])
 (ws/simulate-message! "A123456789" 0 {:type :quote :data {:symbol "2330" :price 650}})

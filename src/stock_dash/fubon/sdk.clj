@@ -95,6 +95,37 @@
                        :available-personal-ids (lifecycle/list-personal-ids)})))
     (bank-balance (first accounts))))
 
+(defn inventories
+  "查詢股票庫存
+
+   參數：account - {:name :branch-no :account :account-type}
+   回傳：[{:date :account :branch-no :stock-no :order-type
+           :lastday-qty :buy-qty :buy-filled-qty :buy-value
+           :today-qty :tradable-qty :sell-qty :sell-filled-qty :sell-value
+           :odd {...}} ...]"
+  [account]
+  (schemas/ensure! :inventories account)
+
+  (let [sdk (lifecycle/get-sdk)]
+    (mu/trace ::inventories
+      [:account (:account account)]
+      (let [result (ffi/inventories sdk account)]
+        (if (:success result)
+          (:inventories result)
+          (throw (ex-info "查詢庫存失敗" result)))))))
+
+(defn inventories-by-personal-id
+  "用 personal-id 查詢庫存（查第一個帳號）"
+  [personal-id]
+  (schemas/ensure! :inventories-by-personal-id personal-id)
+
+  (let [accounts (lifecycle/get-accounts personal-id)]
+    (when-not accounts
+      (throw (ex-info "找不到該身份證的已登入帳號"
+                      {:personal-id personal-id
+                       :available-personal-ids (lifecycle/list-personal-ids)})))
+    (inventories (first accounts))))
+
 (defn list-personal-ids []
   (lifecycle/list-personal-ids))
 
@@ -144,6 +175,10 @@
   ;; 查詢銀行餘額
   (bank-balance first-account)
   (bank-balance-by-personal-id personal-id)
+
+  ;; 查詢股票庫存
+  (inventories first-account)
+  (inventories-by-personal-id personal-id)
 
   ;; 登出
   (logout! personal-id)

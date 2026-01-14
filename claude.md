@@ -65,3 +65,35 @@
 1. 在 `sdk-schema` 加上對應的 multi branch [:action :parameters]
 2. Schema 要對齊 C SDK 的資料結構
 3. 保持簡潔，不過度設計
+
+## C SDK 的 Enum 處理
+
+在 Clojure 使用 **keyword**，FFI 層做 int ↔ keyword 轉換。
+
+### 結構
+- `fubon/enums.clj`：集中定義所有 enum 映射和轉換函數
+- `ffi.clj`：從 C 讀取時用 `int->xxx`，寫入 C 時用 `xxx->int`
+- `sdk.clj`：使用者直接用 keyword
+- `schemas.clj`：**enum 值必須定義在 Malli schema 中驗證**
+
+### 範例
+```clojure
+;; enums.clj
+(def order-type-to-int {:stock 1 :margin 2 :short 3 ...})
+(def int-to-order-type (clojure.set/map-invert order-type-to-int))
+(defn int->order-type [n] (int-to-order-type n n)) ;; fallback 到原始數字
+
+;; schemas.clj - 使用 :enum 定義可用值
+[:order-type {:optional true} [:enum :stock :margin :short :sbl :day-trade]]
+
+;; ffi.clj 讀取
+{:order-type (enums/int->order-type order-type) ...}
+
+;; sdk.clj 使用
+(inventories ...) ;; => [{:order-type :stock ...}]
+```
+
+### 主要 Enum
+OrderType, MarketType, PriceType, TimeInForce, BSAction, Direction
+
+**按需實作**：實作 API 時才加入對應 enum，並同步更新 Malli schema。

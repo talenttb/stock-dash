@@ -1,7 +1,9 @@
 (ns stock-dash.fubon.ffi
   "低階 FFI bindings，直接封裝 Panama FFI 呼叫"
   (:import [java.lang.foreign Arena MemorySegment ValueLayout]
-           [com.fubon.ffi fubon_c_h FubonAccount FubonAccountArray FubonLoginResult FubonBankRemain FubonBankRemainResult]))
+           [com.fubon.ffi fubon_c_h FubonAccount FubonAccountArray FubonLoginResult
+            FubonBankRemain FubonBankRemainResult
+            FubonInventory FubonInventoryArray FubonInventoryOdd FubonInventoryResult]))
 
 ;; === Arena 管理 ===
 (defonce ^:private global-arena (atom nil))
@@ -150,6 +152,97 @@
             (let [error-msg (when-not (.equals error-msg-ptr (MemorySegment/NULL))
                               (.getString error-msg-ptr 0))]
               (fubon_c_h/fubon_free_bank_remain_result result-seg)
+              {:success false :error-msg (or error-msg "Unknown error")})))))))
+
+;; === 庫存查詢 ===
+(defn- parse-inventory-odd
+  "解析 FubonInventoryOdd 結構
+   參數：odd-seg - MemorySegment (embedded struct)
+   回傳：{:lastday-qty :buy-qty :buy-filled-qty ...}"
+  [odd-seg]
+  {:lastday-qty (FubonInventoryOdd/lastday_qty odd-seg)
+   :buy-qty (FubonInventoryOdd/buy_qty odd-seg)
+   :buy-filled-qty (FubonInventoryOdd/buy_filled_qty odd-seg)
+   :buy-value (FubonInventoryOdd/buy_value odd-seg)
+   :today-qty (FubonInventoryOdd/today_qty odd-seg)
+   :tradable-qty (FubonInventoryOdd/tradable_qty odd-seg)
+   :sell-qty (FubonInventoryOdd/sell_qty odd-seg)
+   :sell-filled-qty (FubonInventoryOdd/sell_filled_qty odd-seg)
+   :sell-value (FubonInventoryOdd/sell_value odd-seg)})
+
+(defn- parse-inventory-array
+  "解析 FubonInventoryArray 為 Clojure vector
+   參數：inventory-ptr - FubonInventoryArray* 指標
+   回傳：[{:date :account :stock-no :order-type :lastday-qty ...} ...]"
+  [inventory-ptr]
+  (if (.equals inventory-ptr (MemorySegment/NULL))
+    []
+    (let [count (FubonInventoryArray/count inventory-ptr)
+          items-ptr (FubonInventoryArray/items inventory-ptr)]
+      (if (or (zero? count) (.equals items-ptr (MemorySegment/NULL)))
+        []
+        ;; 遍歷 FubonInventory 陣列
+        (mapv (fn [i]
+                (let [inv-seg (FubonInventory/asSlice items-ptr i)
+                      date-ptr (FubonInventory/date inv-seg)
+                      account-ptr (FubonInventory/account inv-seg)
+                      branch-no-ptr (FubonInventory/branch_no inv-seg)
+                      stock-no-ptr (FubonInventory/stock_no inv-seg)
+                      order-type (FubonInventory/order_type inv-seg)
+                      odd-seg (FubonInventory/odd inv-seg)]
+                  {:date (parse-c-string date-ptr)
+                   :account (parse-c-string account-ptr)
+                   :branch-no (parse-c-string branch-no-ptr)
+                   :stock-no (parse-c-string stock-no-ptr)
+                   :order-type order-type
+                   :lastday-qty (FubonInventory/lastday_qty inv-seg)
+                   :buy-qty (FubonInventory/buy_qty inv-seg)
+                   :buy-filled-qty (FubonInventory/buy_filled_qty inv-seg)
+                   :buy-value (FubonInventory/buy_value inv-seg)
+                   :today-qty (FubonInventory/today_qty inv-seg)
+                   :tradable-qty (FubonInventory/tradable_qty inv-seg)
+                   :sell-qty (FubonInventory/sell_qty inv-seg)
+                   :sell-filled-qty (FubonInventory/sell_filled_qty inv-seg)
+                   :sell-value (FubonInventory/sell_value inv-seg)
+                   :odd (parse-inventory-odd odd-seg)}))
+              (range count))))))
+
+(defn inventories
+  "查詢股票庫存
+   參數：sdk-handle, account {:name str :branch-no str :account str :account-type str}
+   回傳：{:success boolean :inventories [...]} 或 {:success false :error-msg str}"
+  [sdk-handle account]
+  (let [arena @global-arena
+        ;; 建立 FubonAccount 結構
+        account-seg (.allocate arena (FubonAccount/layout))
+        ;; 設定 FubonAccount 欄位
+        name-str (.allocateFrom arena (or (:name account) ""))
+        branch-str (.allocateFrom arena (:branch-no account))
+        account-str (.allocateFrom arena (:account account))
+        type-str (.allocateFrom arena (or (:account-type account) ""))]
+    ;; 寫入結構
+    (FubonAccount/name account-seg name-str)
+    (FubonAccount/branch_no account-seg branch-str)
+    (FubonAccount/account account-seg account-str)
+    (FubonAccount/account_type account-seg type-str)
+    ;; 呼叫 C 函數
+    (let [result-seg (fubon_c_h/fubon_inventories sdk-handle account-seg)]
+      ;; 檢查結果
+      (if (.equals result-seg (MemorySegment/NULL))
+        {:success false :error-msg "查詢失敗：回傳 NULL"}
+        (let [is-success (FubonInventoryResult/is_success result-seg)
+              error-msg-ptr (FubonInventoryResult/error_message result-seg)
+              data-ptr (FubonInventoryResult/data result-seg)]
+          (if is-success
+            ;; 成功：解析 FubonInventoryArray
+            (let [inventories (parse-inventory-array data-ptr)]
+              (fubon_c_h/fubon_free_inventory_result result-seg)
+              {:success true
+               :inventories inventories})
+            ;; 失敗
+            (let [error-msg (when-not (.equals error-msg-ptr (MemorySegment/NULL))
+                              (.getString error-msg-ptr 0))]
+              (fubon_c_h/fubon_free_inventory_result result-seg)
               {:success false :error-msg (or error-msg "Unknown error")})))))))
 
 ;; === WebSocket Callback 註冊（TODO）===

@@ -24,7 +24,40 @@
     :fubon/balance-result
     [:map
      [:balance :int]
-     [:available-balance :int]]}))
+     [:available-balance :int]]
+
+    :fubon/inventory-odd
+    [:map
+     [:lastday-qty :int]
+     [:buy-qty :int]
+     [:buy-filled-qty :int]
+     [:buy-value :int]
+     [:today-qty :int]
+     [:tradable-qty :int]
+     [:sell-qty :int]
+     [:sell-filled-qty :int]
+     [:sell-value :int]]
+
+    :fubon/inventory
+    [:map
+     [:date [:maybe :string]]
+     [:account [:maybe :string]]
+     [:branch-no [:maybe :string]]
+     [:stock-no [:maybe :string]]
+     [:order-type :int]
+     [:lastday-qty :int]
+     [:buy-qty :int]
+     [:buy-filled-qty :int]
+     [:buy-value :int]
+     [:today-qty :int]
+     [:tradable-qty :int]
+     [:sell-qty :int]
+     [:sell-filled-qty :int]
+     [:sell-value :int]
+     [:odd :fubon/inventory-odd]]
+
+    :fubon/inventories-result
+    [:vector :fubon/inventory]}))
 
 (mr/set-default-registry! registry)
 
@@ -40,6 +73,10 @@
    [:bank-balance
     [:tuple :keyword :fubon/account]]
    [:bank-balance-by-personal-id
+    [:tuple :keyword :fubon/personal-id]]
+   [:inventories
+    [:tuple :keyword :fubon/account]]
+   [:inventories-by-personal-id
     [:tuple :keyword :fubon/personal-id]]
    [:logout
     [:tuple :keyword :fubon/personal-id]]])
